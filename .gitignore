@@ -34,3 +34,4 @@ vignettes/*.pdf
 
 # PDFS
 *.pdf
+.Rproj.user
