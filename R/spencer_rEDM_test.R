@@ -63,7 +63,7 @@ who <- get_flu_data(region = "national", data_source = "who", years= 1997:2017)
 who <- who[[1]]
 ili <- ili[1:nrow(who),]
 
-flu_ts <- as.numeric(ili$`% WEIGHTED ILI`) * as.numeric(who$`PERCENT POSITIVE`)
+flu_ts <- as.numeric(ili$`% WEIGHTED ILI`) #* as.numeric(who$`PERCENT POSITIVE`)
 flu_ts <- flu_ts[which(ili$YEAR == 2002 & ili$WEEK == 40):length(flu_ts)]
 lib<-c(1, 400)
 pred<-c(401, length(flu_ts))
@@ -72,19 +72,29 @@ par(mar = c(4, 4, 1, 1), mgp = c(2.5, 1, 0))
 plot(flu_simplex$E, flu_simplex$rho, type = "l", xlab = "Embedding Dimension (E)", 
      ylab = "Forecast Skill (rho)")
 
-flu_simplex <- simplex(flu_ts, lib, pred, E = 2, tau = 10, tp = 8, stats_only = F)
+flu_simplex <- simplex(flu_ts, lib, pred, E = 3, tau = 10, tp = 4, stats_only = F)
 plot(flu_simplex[[1]]$model_output$pred, type="l")
 lines(x = flu_ts, col="red")
 plot(flu_simplex[[1]]$model_output$obs, flu_simplex[[1]]$model_output$pred)
 
 
 
-flu_df <- data.frame(time=seq(from=1, to=length(flu_ts)), 
-                         xt=flu_ts)
+flu_df <- data.frame(time=seq(from=1, to=length(flu_ts)-1), 
+                         xt=diff(flu_ts),
+                         xtm1=c(NA, diff(flu_ts[-length(flu_ts)])),
+                         xtm2=c(NA, NA, diff(flu_ts[-((length(flu_ts)-1):length(flu_ts))])))
 
-block_lnlp_output <- block_lnlp(flu_ts, lib = lib, pred = pred, tp = 4, 
-                                 stats_only = FALSE, first_column_time = TRUE)
+# flu_df <- data.frame(time=seq(from=1, to=length(flu_ts)), 
+#                      xt=flu_ts,
+#                      xtm1=c(NA, flu_ts[-length(flu_ts)]),
+#                      xtm2=c(NA, NA, flu_ts[-((length(flu_ts)-1):length(flu_ts))]))
 
+lib <- c(1, 500)
+pred <- c(501, 678)
+block_lnlp_output <- block_lnlp(flu_df, lib = lib, pred = pred, tp = 3, target_column = 1,
+                                  first_column_time = TRUE, stats_only = FALSE)
+
+block_lnlp_output[[1]]$stats
 
 observed <- block_lnlp_output[[1]]$model_output$obs
 predicted <- block_lnlp_output[[1]]$model_output$pred
@@ -96,3 +106,26 @@ plot(observed, predicted, xlim = plot_range, ylim = plot_range, xlab = "Observed
 abline(a = 0, b = 1, lty = 2, col = "blue")
 
 plot(predicted, type = "l")
+plot(flu_df$xt, type="l", col="red")
+
+
+####################################################
+## Simulated data test
+####################################################
+sim_data <- read_csv("produced_data/sirs_sim_100yrs.csv")
+sim_data <- as.numeric(unlist(sim_data))
+lib<-c(1, 2000)
+pred<-c(2001, length(sim_data))
+flu_simplex <- simplex(sim_data, lib, pred, E = 1:10)
+par(mar = c(4, 4, 1, 1), mgp = c(2.5, 1, 0))
+plot(flu_simplex$E, flu_simplex$rho, type = "l", xlab = "Embedding Dimension (E)", 
+     ylab = "Forecast Skill (rho)")
+
+flu_simplex <- simplex(sim_data, lib, pred, E = 5, tp = 1:20)
+par(mar = c(4, 4, 1, 1))
+plot(flu_simplex$tp, flu_simplex$rho, type = "l", xlab = "Time to Prediction (tp)", 
+     ylab = "Forecast Skill (rho)")
+
+flu_simplex <- simplex(sim_data, lib, pred, E = 5, tp = 4, stats_only = F)
+plot(flu_simplex[[1]]$model_output$pred,flu_simplex[[1]]$model_output$obs)
+
