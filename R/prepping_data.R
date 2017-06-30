@@ -16,5 +16,11 @@ plot(flu_ts, type ="l")
 
 write_csv(x = data_frame(ili = flu_ts), "data/flu_ili.csv")
 
+Iquitos<-read.csv('/Users/aliciakraay/Dropbox/TiseanData/Iquitos_Testing_Data.csv')
+SanJuan<-read.csv('/Users/aliciakraay/Dropbox/TiseanData/San_Juan_Testing_Data.csv')
 
+dengue_ts<-SanJuan$total_cases
+plot(dengue_ts, type='l')
+
+write.csv(dengue_ts, '/Users/aliciakraay/Dropbox/TiseanData/DengueTS.csv')
 

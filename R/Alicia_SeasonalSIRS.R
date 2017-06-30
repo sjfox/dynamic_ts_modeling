@@ -32,7 +32,7 @@ out %>% gather(key, value, S:R) %>%
 plot(out$I[1:3650], type='l')
 seasonal<-out$I
 #Option 1: Gaussian noise (need to rescale values below 0)
-seasonal.noisegaussian<-rnorm(length(seasonal), seasonal, sd=sd(seasonal))
+seasonal.noisegaussian<-rnorm(length(seasonal), seasonal, sd=.01)
 #Option 2: Poisson noise (have to convert the values to the numeric scale before adding the noise)
 seasonal2<-seasonal*100
 seasonal.noisepoisson<-rpois(length(seasonal2), seasonal2)
